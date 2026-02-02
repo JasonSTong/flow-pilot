@@ -17,7 +17,8 @@
       },
       "source": {
         "source": "url",
-        "url": "https://github.com/JasonSTong/flow-pilot/archive/refs/heads/main.tar.gz"
+        "url": "https://github.com/JasonSTong/flow-pilot.git",
+        "ref": "main"
       },
       "category": "development",
       "homepage": "https://github.com/JasonSTong/flow-pilot"
