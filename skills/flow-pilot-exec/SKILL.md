@@ -1,7 +1,7 @@
 ---
 name: flow-pilot-exec
-description: Flow-Pilot 执行引擎。按照计划执行开发任务，支持 TDD 模式，实时更新进度。可被 flow-pilot 调用，也可独立执行指定 Pilot。
-version: 1.0.0
+description: 执行开发任务（支持 TDD）
+version: 1.0.2
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Skill(flow-pilot-test)
 ---

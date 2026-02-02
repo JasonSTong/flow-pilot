@@ -1,7 +1,7 @@
 ---
 name: flow-pilot-status
-description: 查看 Flow-Pilot 的状态和进度。可以查看当前活跃 Pilot、所有 Pilot 列表、详细进度信息。完全独立使用，只读不修改。
-version: 1.0.0
+description: 查看状态和进度
+version: 1.0.2
 disable-model-invocation: true
 allowed-tools: Read, Bash
 ---

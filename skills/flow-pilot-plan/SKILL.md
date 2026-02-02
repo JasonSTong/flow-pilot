@@ -1,7 +1,7 @@
 ---
 name: flow-pilot-plan
-description: 为 Flow-Pilot 生成详细的分阶段执行计划。可被 flow-pilot 调用，也可独立使用生成或查看计划。
-version: 1.0.0
+description: 生成或查看执行计划
+version: 1.0.2
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Skill(flow-pilot-exec)
 ---

@@ -1,7 +1,7 @@
 ---
 name: flow-pilot
-description: Flow-Pilot 智能工作流主流程。自动识别项目阶段（新项目/新功能/修改功能），收集需求，生成跨端协作文档。
-version: 1.0.0
+description: 智能工作流：需求收集、计划生成、自动执行
+version: 1.0.2
 disable-model-invocation: false
 allowed-tools: Read, Grep, Bash, AskUserQuestion, Skill(*)
 ---

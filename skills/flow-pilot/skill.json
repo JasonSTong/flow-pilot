@@ -2,5 +2,5 @@
   "name": "flow-pilot",
   "description": "智能工作流：需求收集、计划生成、自动执行",
   "userInvocable": true,
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

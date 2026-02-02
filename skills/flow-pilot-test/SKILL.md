@@ -1,7 +1,7 @@
 ---
 name: flow-pilot-test
-description: TDD 测试驱动开发助手。可独立使用为任何代码编写测试，也可在 Pilot 执行中自动触发。支持 Python、TypeScript、JavaScript、Go 等多种语言。
-version: 1.0.0
+description: TDD 测试助手（多语言支持）
+version: 1.0.2
 disable-model-invocation: false
 allowed-tools: Read, Write, Edit, Bash
 ---
