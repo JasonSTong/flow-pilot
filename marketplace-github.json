@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "flow-pilot-marketplace",
+  "description": "Flow-Pilot intelligent workflow system for Claude Code",
+  "owner": {
+    "name": "Jason Chen",
+    "email": "chensitongc@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "flow-pilot",
+      "version": "1.0.0",
+      "description": "智能 AI 工作流系统 - 让 Claude Code 以更规范、更高效的方式引导你的开发工作",
+      "author": {
+        "name": "Jason Chen",
+        "email": "chensitongc@gmail.com"
+      },
+      "source": "https://github.com/JasonSTong/flow-pilot/archive/refs/heads/main.tar.gz",
+      "category": "development",
+      "homepage": "https://github.com/JasonSTong/flow-pilot"
+    }
+  ]
+}
