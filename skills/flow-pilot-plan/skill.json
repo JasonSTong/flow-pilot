@@ -1,0 +1,6 @@
+{
+  "name": "flow-pilot-plan",
+  "description": "为 Flow-Pilot 生成详细的分阶段执行计划。可被 flow-pilot 调用，也可独立使用生成或查看计划。",
+  "userInvocable": true,
+  "version": "1.0.0"
+}
