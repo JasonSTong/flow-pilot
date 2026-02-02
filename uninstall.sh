@@ -14,6 +14,7 @@ echo ""
 GLOBAL_CONFIG="$HOME/.claude/settings.json"
 CLAUDE_DIR="$HOME/.claude"
 PLUGINS_DIR="$CLAUDE_DIR/plugins"
+PLUGIN_INSTALL_DIR="$PLUGINS_DIR/flow-pilot"
 MARKETPLACES_DIR="$PLUGINS_DIR/marketplaces"
 CACHE_DIR="$PLUGINS_DIR/cache"
 
@@ -31,13 +32,19 @@ echo "🔍 检查安装状态..."
 INSTALLED=false
 
 if [ -f "$GLOBAL_CONFIG" ] && [ "$USE_JQ" = true ]; then
-    if jq -e '.enabledPlugins["flow-pilot@flow-pilot-marketplace"]' "$GLOBAL_CONFIG" &>/dev/null; then
+    if jq -e '.enabledPlugins["flow-pilot"]' "$GLOBAL_CONFIG" &>/dev/null || \
+       jq -e '.enabledPlugins["flow-pilot@flow-pilot-marketplace"]' "$GLOBAL_CONFIG" &>/dev/null; then
         INSTALLED=true
     fi
 elif [ -f "$GLOBAL_CONFIG" ]; then
-    if grep -q "flow-pilot@flow-pilot-marketplace" "$GLOBAL_CONFIG"; then
+    if grep -q "flow-pilot" "$GLOBAL_CONFIG"; then
         INSTALLED=true
     fi
+fi
+
+# 同时检查插件目录
+if [ -d "$PLUGIN_INSTALL_DIR" ]; then
+    INSTALLED=true
 fi
 
 if [ "$INSTALLED" = false ]; then
@@ -72,8 +79,8 @@ if [ -f "$GLOBAL_CONFIG" ] && [ "$USE_JQ" = true ]; then
     # 备份配置
     cp "$GLOBAL_CONFIG" "$GLOBAL_CONFIG.backup"
 
-    # 移除 enabledPlugins 中的条目
-    jq 'del(.enabledPlugins["flow-pilot@flow-pilot-marketplace"])' "$GLOBAL_CONFIG.backup" > "$GLOBAL_CONFIG.tmp1"
+    # 移除 enabledPlugins 中的条目（两种格式都删除）
+    jq 'del(.enabledPlugins["flow-pilot"]) | del(.enabledPlugins["flow-pilot@flow-pilot-marketplace"])' "$GLOBAL_CONFIG.backup" > "$GLOBAL_CONFIG.tmp1"
 
     # 移除 extraKnownMarketplaces 中的条目
     jq 'del(.extraKnownMarketplaces["flow-pilot-marketplace"])' "$GLOBAL_CONFIG.tmp1" > "$GLOBAL_CONFIG"
@@ -95,13 +102,26 @@ fi
 
 echo ""
 
-# 2. 清理缓存文件
-echo "2️⃣  清理插件缓存..."
+# 2. 清理插件文件
+echo "2️⃣  清理插件文件..."
+CLEANED=false
+
+# 清理直接安装的插件
+if [ -d "$PLUGIN_INSTALL_DIR" ]; then
+    rm -rf "$PLUGIN_INSTALL_DIR"
+    echo "   ✅ 插件目录已删除: $PLUGIN_INSTALL_DIR"
+    CLEANED=true
+fi
+
+# 清理缓存
 if [ -d "$CACHE_DIR/flow-pilot-marketplace" ]; then
     rm -rf "$CACHE_DIR/flow-pilot-marketplace"
     echo "   ✅ 缓存已删除"
-else
-    echo "   ℹ️  未找到缓存文件"
+    CLEANED=true
+fi
+
+if [ "$CLEANED" = false ]; then
+    echo "   ℹ️  未找到插件文件"
 fi
 
 echo ""
