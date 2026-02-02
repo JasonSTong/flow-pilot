@@ -135,16 +135,58 @@ if [ "$KEEP_DATA" = false ]; then
     read -p "确认删除所有项目数据? (y/N): " -n 1 -r </dev/tty
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        # 查找并列出所有 pilots 目录
-        echo "   搜索项目数据..."
-        pilots_dirs=$(find ~ -path "*/.claude/pilots" -type d 2>/dev/null || true)
+        echo ""
+        echo "   搜索范围选项："
+        echo "   1) 仅搜索常见项目目录 (~/Projects, ~/Documents, ~/Desktop, ~/Downloads)"
+        echo "   2) 搜索整个用户目录 (可能很慢)"
+        echo "   3) 手动输入项目路径"
+        echo ""
+        read -p "   请选择 (1/2/3): " -n 1 -r </dev/tty
+        echo
+
+        case $REPLY in
+            1)
+                # 搜索常见项目目录
+                echo "   搜索常见项目目录..."
+                SEARCH_PATHS=("$HOME/Projects" "$HOME/Documents" "$HOME/Desktop" "$HOME/Downloads" "$HOME/Code" "$HOME/Dev" "$HOME/Workspace")
+                pilots_dirs=""
+                for path in "${SEARCH_PATHS[@]}"; do
+                    if [ -d "$path" ]; then
+                        found=$(find "$path" -maxdepth 5 -path "*/.claude/pilots" -type d 2>/dev/null || true)
+                        if [ -n "$found" ]; then
+                            pilots_dirs="$pilots_dirs$found"$'\n'
+                        fi
+                    fi
+                done
+                ;;
+            2)
+                # 搜索整个用户目录
+                echo "   ⚠️  搜索整个用户目录（这可能需要几分钟）..."
+                pilots_dirs=$(find ~ -path "*/.claude/pilots" -type d 2>/dev/null || true)
+                ;;
+            3)
+                # 手动输入
+                echo ""
+                read -p "   请输入项目目录路径: " project_path </dev/tty
+                if [ -d "$project_path/.claude/pilots" ]; then
+                    pilots_dirs="$project_path/.claude/pilots"
+                else
+                    echo "   ⚠️  未找到 $project_path/.claude/pilots"
+                    pilots_dirs=""
+                fi
+                ;;
+            *)
+                echo "   ⏭️  跳过"
+                pilots_dirs=""
+                ;;
+        esac
 
         if [ -n "$pilots_dirs" ]; then
             echo "   找到以下 Pilot 数据目录："
-            echo "$pilots_dirs" | sed 's/^/   - /'
+            echo "$pilots_dirs" | grep -v '^$' | sed 's/^/   - /'
             echo ""
             echo "   正在删除..."
-            echo "$pilots_dirs" | while read -r dir; do
+            echo "$pilots_dirs" | grep -v '^$' | while read -r dir; do
                 rm -rf "$dir"
             done
             echo "   ✅ 已删除项目数据"
