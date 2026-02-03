@@ -42,156 +42,35 @@
 
 ### 前置要求
 
-- **Claude Code CLI** (>= 1.0.0)
-- **jq** - JSON 处理工具（用于脚本）
-  ```bash
-  # macOS
-  brew install jq
+- **Claude Code CLI** (>= 2.0.0)
 
-  # Ubuntu/Debian
-  sudo apt-get install jq
+### 安装步骤
 
-  # CentOS/RHEL
-  sudo yum install jq
-  ```
+1. **在 Claude Code 中打开插件管理**
+   ```bash
+   claude
+   /plugin
+   ```
 
-### 快速安装（推荐）
+2. **切换到 Marketplaces 标签**，点击 `+ Add Marketplace`
 
-**方式 0: GitHub 官方源（最新推荐）** ⭐
+3. **输入 marketplace URL**：
+   ```
+   https://raw.githubusercontent.com/JasonSTong/flow-pilot/main/.claude-plugin/marketplace.json
+   ```
 
-直接从 GitHub 安装，无需下载，自动获取最新版本：
+4. **切换到 Discover 标签**，找到 `flow-pilot` 并安装
 
-```bash
-# 一键配置（仅需运行一次）
-curl -fsSL https://raw.githubusercontent.com/JasonSTong/flow-pilot/main/install-from-github.sh | bash
+5. **重启 Claude Code**
+   ```bash
+   exit
+   claude
+   ```
 
-# 重启 Claude Code，即可在任何项目中使用
-exit
-claude
-/flow-pilot
-```
-
-**特点：**
-- ✅ **默认官方仓库**：配置后全局可用
-- ✅ **自动更新**：每次使用都从 GitHub 获取最新版本
-- ✅ **无本地文件**：不占用本地存储空间
-- ✅ **跨项目通用**：一次配置，所有项目都可使用
-
-**Marketplace 配置：**
-```json
-{
-  "extraKnownMarketplaces": {
-    "flow-pilot-marketplace": {
-      "source": {
-        "source": "url",
-        "url": "https://raw.githubusercontent.com/JasonSTong/flow-pilot/main/.claude-plugin/marketplace.json"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "flow-pilot@flow-pilot-marketplace": true
-  }
-}
-```
-
----
-
-**方式 1: 本地安装（离线可用）** 🚀
-
-```bash
-# 在你的项目目录中运行
-cd /path/to/your/project
-curl -fsSL https://raw.githubusercontent.com/JasonSTong/flow-pilot/main/quick-install.sh | bash
-
-# 重启 Claude Code，测试
-exit
-claude
-/flow-pilot
-```
-
-**特点：**
-- ✅ 自动下载到 `~/.claude/plugins/flow-pilot`
-- ✅ 自动配置当前项目
-- ✅ 支持更新已安装版本
-- ✅ 无需 git（自动回退到 curl 下载）
-
----
-
-**方式 2: 下载安装包 + 自动安装**
-
-```bash
-# 1. 下载并解压
-wget https://github.com/JasonSTong/flow-pilot/releases/latest/download/flow-pilot-v1.0.0.tar.gz
-tar -xzf flow-pilot-v1.0.0.tar.gz
-cd flow-pilot-v1.0.0
-
-# 2. 在你的项目目录中运行安装脚本
-cd /path/to/your/project
-bash /path/to/flow-pilot-v1.0.0/install.sh
-
-# 3. 重启 Claude Code，测试
-/flow-pilot
-```
-
-**方式 3: 克隆 + 自动安装**
-
-```bash
-# 1. 克隆仓库
-git clone https://github.com/JasonSTong/flow-pilot.git
-
-# 2. 在你的项目目录中运行安装脚本
-cd /path/to/your/project
-bash /path/to/flow-pilot/install.sh
-
-# 3. 重启 Claude Code，测试
-/flow-pilot
-```
-
-**方式 4: Claude Code 插件命令**
-
-在你的项目中打开 Claude Code，运行：
-```
-/plugin
-```
-选择 **"Install from local path"**，输入 Flow-Pilot 的路径。
-
-**方式 5: 从 GitHub 发现安装（即将支持）**
-
-> ⏳ 插件正在等待 Claude Code 索引，目前请使用方式 1-3
-
-未来可用时，在 Claude Code 中运行：
-```
-/plugin
-```
-选择 "Install from GitHub"，输入：`JasonSTong/flow-pilot`
-
-### 验证安装
-
-安装成功后，在 Claude Code 中输入：
-```
-/flow-pilot
-```
-
-看到启动界面即表示安装成功！
-
-> 💡 详细安装说明请查看 [INSTALL.md](INSTALL.md)
-
-### 卸载
-
-如需卸载 Flow-Pilot：
-
-```bash
-# 下载并运行卸载脚本
-curl -fsSL https://raw.githubusercontent.com/JasonSTong/flow-pilot/main/uninstall.sh | bash
-
-# 或者，如果你已经克隆了仓库
-bash /path/to/flow-pilot/uninstall.sh
-```
-
-**卸载脚本会：**
-- ✅ 删除插件文件
-- ✅ 清理配置和缓存
-- ✅ 询问是否保留项目数据（`.claude/pilots/`）
+6. **使用插件**
+   ```bash
+   /flow-pilot <你的需求>
+   ```
 
 ---
 
