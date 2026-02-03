@@ -34,7 +34,9 @@ echo ""
 
 # 路径定义
 GLOBAL_CONFIG="$HOME/.claude/settings.json"
+KNOWN_MARKETPLACES="$HOME/.claude/plugins/known_marketplaces.json"
 CLAUDE_DIR="$HOME/.claude"
+PLUGINS_DIR="$HOME/.claude/plugins"
 
 # 检查 jq
 if ! command -v jq &> /dev/null; then
@@ -49,6 +51,7 @@ fi
 
 # 创建目录
 mkdir -p "$CLAUDE_DIR"
+mkdir -p "$PLUGINS_DIR"
 
 # 配置 marketplace
 if [ -f "$GLOBAL_CONFIG" ]; then
@@ -113,6 +116,56 @@ EOF
     fi
 fi
 
+# 配置 known_marketplaces.json
+echo ""
+echo "📦 注册 marketplace..."
+
+CURRENT_TIME=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+
+if [ -f "$KNOWN_MARKETPLACES" ]; then
+    cp "$KNOWN_MARKETPLACES" "$KNOWN_MARKETPLACES.backup"
+
+    jq --arg url "$MARKETPLACE_URL" --arg time "$CURRENT_TIME" '
+        . + {
+            "flow-pilot-marketplace": {
+                "source": {
+                    "source": "url",
+                    "url": $url
+                },
+                "lastUpdated": $time
+            }
+        }
+    ' "$KNOWN_MARKETPLACES.backup" > "$KNOWN_MARKETPLACES"
+
+    if jq empty "$KNOWN_MARKETPLACES" 2>/dev/null; then
+        rm "$KNOWN_MARKETPLACES.backup"
+        echo "✅ Marketplace 已注册"
+    else
+        mv "$KNOWN_MARKETPLACES.backup" "$KNOWN_MARKETPLACES"
+        echo "❌ Marketplace 注册失败"
+        exit 1
+    fi
+else
+    cat > "$KNOWN_MARKETPLACES" << EOF
+{
+  "flow-pilot-marketplace": {
+    "source": {
+      "source": "url",
+      "url": "$MARKETPLACE_URL"
+    },
+    "lastUpdated": "$CURRENT_TIME"
+  }
+}
+EOF
+
+    if jq empty "$KNOWN_MARKETPLACES" 2>/dev/null; then
+        echo "✅ Marketplace 已注册"
+    else
+        echo "❌ Marketplace 注册失败"
+        exit 1
+    fi
+fi
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Marketplace 配置完成"
@@ -126,19 +179,15 @@ echo ""
 echo "2. 打开插件管理"
 echo "   /plugin"
 echo ""
-echo "3. 切换到 Marketplaces 标签"
-echo "   → 找到 flow-pilot-marketplace"
-echo "   → 点击 'Add marketplace' 或 'Update'"
-echo ""
-echo "4. 切换到 Discover 标签"
+echo "3. 切换到 Discover 标签"
 echo "   → 找到 flow-pilot"
 echo "   → 点击 'Install for you (user scope)'"
 echo ""
-echo "5. 重启 Claude Code"
+echo "4. 重启 Claude Code"
 echo "   exit"
 echo "   claude"
 echo ""
-echo "6. 使用插件"
+echo "5. 使用插件"
 echo "   /flow-pilot <你的需求>"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
