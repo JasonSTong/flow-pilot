@@ -12,7 +12,6 @@ echo ""
 
 # 路径定义
 GLOBAL_CONFIG="$HOME/.claude/settings.json"
-KNOWN_MARKETPLACES="$HOME/.claude/plugins/known_marketplaces.json"
 CLAUDE_DIR="$HOME/.claude"
 PLUGINS_DIR="$CLAUDE_DIR/plugins"
 PLUGIN_INSTALL_DIR="$PLUGINS_DIR/flow-pilot"
@@ -99,27 +98,6 @@ else
     echo "1️⃣  跳过配置文件更新（未检测到 jq 或配置文件不存在）"
     echo "   ⚠️  请手动编辑 $GLOBAL_CONFIG"
     echo "   移除 flow-pilot@flow-pilot-marketplace 相关配置"
-fi
-
-# 从 known_marketplaces.json 中移除
-if [ -f "$KNOWN_MARKETPLACES" ] && [ "$USE_JQ" = true ]; then
-    echo ""
-    echo "   📝 从 known_marketplaces.json 中移除..."
-
-    # 备份配置
-    cp "$KNOWN_MARKETPLACES" "$KNOWN_MARKETPLACES.backup"
-
-    # 移除 flow-pilot-marketplace
-    jq 'del(.["flow-pilot-marketplace"])' "$KNOWN_MARKETPLACES.backup" > "$KNOWN_MARKETPLACES"
-
-    # 验证 JSON 格式
-    if jq empty "$KNOWN_MARKETPLACES" 2>/dev/null; then
-        rm "$KNOWN_MARKETPLACES.backup"
-        echo "   ✅ known_marketplaces.json 已更新"
-    else
-        echo "   ⚠️  known_marketplaces.json 更新失败，恢复备份"
-        mv "$KNOWN_MARKETPLACES.backup" "$KNOWN_MARKETPLACES"
-    fi
 fi
 
 echo ""
