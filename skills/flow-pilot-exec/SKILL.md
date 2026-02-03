@@ -56,6 +56,139 @@ allowed-tools: Read, Write, Edit, Bash, AskUserQuestion, Skill(flow-pilot-test)
 
 ---
 
+## 全自动模式详解
+
+### 什么是"全自动"？
+
+**全自动模式（execution_mode: "auto" + 权限已授权）= 完全无需用户干预**
+
+当用户选择：
+1. ✅ 执行模式：自动连续执行
+2. ✅ 权限授权：勾选了 dependencies、database、testing
+
+**系统行为：**
+```
+Phase 1: 数据库设计
+  ├─ Task 1.1: 扩展 User 模型 ✅
+  ├─ Task 1.2: 创建迁移脚本 ✅
+  ├─ [需要安装 sqlalchemy]
+  │   └─ ✅ 有 dependencies 权限 → 自动执行：pip install sqlalchemy
+  ├─ Task 1.3: 执行迁移 ✅
+  │   └─ ✅ 有 database 权限 → 自动执行：alembic upgrade head
+  └─ Task 1.4: 运行测试 ✅
+      └─ ✅ 有 testing 权限 → 自动执行：pytest
+
+Phase 1 完成 ✅
+🚀 自动开始 Phase 2...（无需用户说"继续"）
+
+Phase 2: 核心服务层
+  ├─ Task 2.1: ScraperService 实现 ✅
+  ├─ [需要安装 scrapegraph-ai]
+  │   └─ ✅ 有 dependencies 权限 → 自动执行：pip install scrapegraph-ai
+  ├─ Task 2.2: 数据处理流程 ✅
+  └─ Task 2.3: 集成测试 ✅
+
+Phase 2 完成 ✅
+🚀 自动开始 Phase 3...
+
+...一直到所有 Phases 完成，无需任何用户输入 ✅
+```
+
+---
+
+### 半自动模式 vs 全自动模式
+
+#### ❌ 半自动模式（旧行为，错误）
+
+```
+Phase 1 完成 ✅
+[暂停，等待用户确认]
+
+系统: 告诉我"继续 Phase 2"或"开始 Phase 2"来继续执行！
+
+[需要安装依赖]
+系统: 是否安装 sqlalchemy？
+用户: 是
+
+Phase 2 开始...
+[又需要安装依赖]
+系统: 是否安装 fastapi？
+用户: 是
+
+↑ 这是错误的！即使选了自动模式 + 授权了权限，仍在不断询问
+```
+
+#### ✅ 全自动模式（正确行为）
+
+```
+Phase 1 完成 ✅
+🚀 自动开始 Phase 2...
+
+[需要安装依赖]
+📦 自动检测虚拟环境：.venv
+📦 自动安装：sqlalchemy fastapi
+✅ 依赖安装完成
+
+Phase 2 Task 2.1 完成 ✅
+Phase 2 Task 2.2 完成 ✅
+
+[需要执行迁移]
+🔄 自动执行：alembic upgrade head
+✅ 数据库迁移完成
+
+Phase 2 完成 ✅
+🚀 自动开始 Phase 3...
+
+↑ 完全不打扰用户，一气呵成！
+```
+
+---
+
+### 何时会询问用户？
+
+**仅在以下 3 种情况询问：**
+
+#### 1. 遇到错误且无法自动恢复
+
+```
+⚠️  执行中断
+Phase 2, Task 2.2: 数据处理流程
+错误: ImportError: No module named 'pandas'
+
+已尝试自动安装但失败。
+
+[使用 AskUserQuestion 询问：
+ - 重试安装
+ - 手动处理
+ - 跳过此任务]
+```
+
+#### 2. 需要权限但未授权
+
+```
+⚠️  需要权限
+即将执行：alembic upgrade head
+
+当前无 database 权限。
+
+[使用 AskUserQuestion 询问：
+ - 授权并执行
+ - 跳过此步骤]
+```
+
+#### 3. 手动模式下的 Phase 切换
+
+```
+✅ Phase 1 完成
+
+[使用 AskUserQuestion 询问：
+ - 继续 Phase 2
+ - 暂停执行
+ - 切换到自动模式]
+```
+
+---
+
 ## 执行逻辑
 
 ### 1. 加载 Pilot 上下文
@@ -408,6 +541,121 @@ Pilot: 用户认证系统
 
 ## 智能特性
 
+### 权限控制逻辑
+
+**关键原则：权限已授权 = 直接执行，不询问**
+
+```bash
+# 检查是否有权限
+has_permission() {
+  local perm=$1
+  jq -r '.config.permissions[]' $context_file | grep -q "^$perm$"
+}
+
+# 依赖安装
+if needs_install_dependencies; then
+  if has_permission "dependencies"; then
+    # ✅ 有权限：直接执行，不询问
+    echo "📦 安装依赖..."
+    install_dependencies
+  else
+    # ❌ 无权限：询问用户是否授权
+    AskUserQuestion({
+      questions: [{
+        header: "权限请求",
+        question: "需要安装依赖，是否授权？",
+        options: [...]
+      }]
+    })
+  fi
+fi
+```
+
+**适用范围：**
+- ✅ 依赖安装（dependencies）
+- ✅ 数据库迁移（database）
+- ✅ 测试执行（testing）
+- ✅ Git 操作（git）
+
+---
+
+### 智能虚拟环境检测
+
+**安装 Python 依赖时自动检测并使用虚拟环境：**
+
+```bash
+install_python_dependencies() {
+  local packages=$1
+
+  # 1. 检测虚拟环境
+  if [ -d ".venv" ]; then
+    venv_path=".venv"
+  elif [ -d "venv" ]; then
+    venv_path="venv"
+  elif [ -f "poetry.lock" ]; then
+    # Poetry 项目
+    echo "📦 使用 Poetry 安装依赖..."
+    poetry add $packages
+    return
+  elif [ -f "Pipfile" ]; then
+    # Pipenv 项目
+    echo "📦 使用 Pipenv 安装依赖..."
+    pipenv install $packages
+    return
+  fi
+
+  # 2. 使用检测到的虚拟环境
+  if [ -n "$venv_path" ]; then
+    echo "📦 使用虚拟环境：$venv_path"
+    source "$venv_path/bin/activate"
+    pip install $packages
+  else
+    # 3. 没有虚拟环境，创建一个
+    echo "⚠️  未检测到虚拟环境，创建 .venv"
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install $packages
+  fi
+}
+
+# 使用示例
+install_python_dependencies "fastapi uvicorn sqlalchemy"
+```
+
+**支持的虚拟环境类型：**
+- `.venv` / `venv` - 标准虚拟环境
+- `poetry` - Poetry 项目
+- `pipenv` - Pipenv 项目
+- `conda` - Conda 环境（检测 environment.yml）
+
+---
+
+### Node.js 依赖智能安装
+
+**检测包管理器并使用对应命令：**
+
+```bash
+install_node_dependencies() {
+  local packages=$1
+
+  if [ -f "pnpm-lock.yaml" ]; then
+    echo "📦 使用 pnpm 安装依赖..."
+    pnpm add $packages
+  elif [ -f "yarn.lock" ]; then
+    echo "📦 使用 yarn 安装依赖..."
+    yarn add $packages
+  elif [ -f "package-lock.json" ]; then
+    echo "📦 使用 npm 安装依赖..."
+    npm install $packages
+  else
+    # 默认使用 npm
+    npm install $packages
+  fi
+}
+```
+
+---
+
 ### 自动调用 flow-pilot-test
 
 在 strict TDD 模式下，自动调用：
@@ -417,17 +665,7 @@ Pilot: 用户认证系统
 /flow-pilot-test src/utils/auth.py --mode refactor
 ```
 
-### 自动检测依赖安装
-
-```bash
-if grep -q "pip install" plan.md; then
-  if has_permission "dependencies"; then
-    pip install passlib[bcrypt] pyjwt
-  else
-    echo "⚠️  需要依赖安装权限"
-  fi
-fi
-```
+---
 
 ### 智能错误恢复
 
@@ -438,6 +676,11 @@ if [ $? -ne 0 ]; then
 
   if echo "$error_log" | grep -q "ImportError"; then
     echo "检测到导入错误，可能是依赖问题"
+    # 如果有 dependencies 权限，尝试安装缺失的包
+    if has_permission "dependencies"; then
+      echo "尝试安装缺失的依赖..."
+      # 解析错误信息并安装
+    fi
   fi
 fi
 ```
@@ -447,9 +690,52 @@ fi
 ## 记住
 
 你是**执行专家**，不是规划者：
-- 🎯 严格按照计划执行
-- 🔄 根据 TDD 模式调整流程
-- 📊 实时更新进度跟踪
-- 🛡️ 遇到错误智能处理
-- 📋 使用 **AskUserQuestion** 处理错误和异常情况
-- 📝 记录重要决策
+
+### 核心原则
+
+- 🎯 **严格按照计划执行**
+- 🔄 **根据 TDD 模式调整流程**
+- 📊 **实时更新进度跟踪**
+
+### 权限和自动化
+
+- ✅ **权限已授权 = 直接执行**（不询问用户）
+  - dependencies 权限 → 直接安装依赖
+  - database 权限 → 直接执行迁移
+  - testing 权限 → 直接运行测试
+
+- ❌ **权限未授权 = 询问用户**（使用 AskUserQuestion）
+
+### 执行模式
+
+- 🚀 **自动模式（execution_mode: "auto"）**
+  - Phase 完成后自动开始下一个
+  - 有权限的操作直接执行
+  - 真正的全自动，无需用户干预
+
+- 👆 **手动模式（execution_mode: "manual"）**
+  - Phase 完成后等待用户确认
+  - 有权限的操作仍然直接执行
+  - 只在 Phase 切换时询问
+
+### 智能检测
+
+- 🐍 **Python**: 检测 .venv、poetry、pipenv
+- 📦 **Node.js**: 检测 pnpm、yarn、npm
+- 🛡️ **错误处理**: 智能分析并尝试自动修复
+
+### 交互时机
+
+- **只在以下情况询问用户：**
+  1. 遇到错误且无法自动恢复
+  2. 需要权限但未授权
+  3. 手动模式下的 Phase 切换
+
+- **不要询问的情况：**
+  1. ❌ 已有权限的操作（直接执行）
+  2. ❌ 自动模式下的 Phase 切换（直接继续）
+  3. ❌ 常规的任务执行（按计划进行）
+
+### 记录决策
+
+- 📝 **记录重要决策和异常处理**到 decisions.md
