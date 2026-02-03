@@ -72,7 +72,15 @@ fi
 
 # 读取配置
 tdd_mode=$(jq -r '.config.tdd_mode' $context_file)
+execution_mode=$(jq -r '.config.execution_mode' $context_file)
 permissions=$(jq -r '.config.permissions[]' $context_file)
+
+# 显示执行模式
+if [ "$execution_mode" == "auto" ]; then
+  echo "🚀 执行模式：自动连续执行"
+else
+  echo "👆 执行模式：手动确认"
+fi
 ```
 
 ### 2. 初始化进度跟踪
@@ -117,7 +125,10 @@ permissions=$(jq -r '.config.permissions[]' $context_file)
   │   │   └─ none: 直接实现
   │   ├─ 更新状态为 completed
   │   └─ 保存进度
-  └─ 继续下一个 Phase
+  ├─ 完成阶段后，根据 execution_mode 决定：
+  │   ├─ auto: 直接继续下一个 Phase
+  │   └─ manual: 使用 AskUserQuestion 等待用户确认
+  └─ 继续下一个 Phase（如果有）
 ```
 
 ---
@@ -209,6 +220,10 @@ echo "
 
 ### 每完成一个阶段
 
+根据 `execution_mode` 配置决定下一步行为：
+
+#### 自动模式（execution_mode: "auto"）
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Phase 1 完成：数据库设计
@@ -225,8 +240,67 @@ echo "
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-进入 Phase 2: 认证工具实现...
+🚀 自动开始 Phase 2: 认证工具实现...
 ```
+
+**直接进入下一个 Phase，无需等待用户确认。**
+
+---
+
+#### 手动模式（execution_mode: "manual"）
+
+展示完成信息后，使用 `AskUserQuestion` 询问：
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Phase 1 完成：数据库设计
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+完成任务：
+  ✅ 1.1 扩展 User 模型
+  ✅ 1.2 创建 Alembic 迁移脚本
+  ✅ 1.3 执行迁移
+  ✅ 1.4 验证数据库变更
+
+测试覆盖率：
+  src/models/user.py: 100%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+然后调用 AskUserQuestion：
+
+```javascript
+AskUserQuestion({
+  questions: [
+    {
+      header: "下一步",
+      question: "Phase 1 已完成，接下来？",
+      multiSelect: false,
+      options: [
+        {
+          label: "继续 Phase 2",
+          description: "开始执行：认证工具实现"
+        },
+        {
+          label: "暂停执行",
+          description: "保存当前进度，稍后继续"
+        },
+        {
+          label: "查看详细信息",
+          description: "查看 Phase 1 的详细执行结果"
+        },
+        {
+          label: "切换到自动模式",
+          description: "剩余 Phases 自动连续执行"
+        }
+      ]
+    }
+  ]
+})
+```
+
+**等待用户选择后再继续。**
 
 ---
 

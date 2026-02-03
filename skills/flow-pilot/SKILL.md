@@ -694,6 +694,21 @@ AskUserQuestion({
       ]
     },
     {
+      header: "执行模式",
+      question: "阶段执行方式？",
+      multiSelect: false,
+      options: [
+        {
+          label: "自动连续执行（推荐）",
+          description: "完成一个 Phase 后自动开始下一个，无需手动确认"
+        },
+        {
+          label: "手动确认",
+          description: "每个 Phase 完成后等待你确认再继续"
+        }
+      ]
+    },
+    {
       header: "权限授权",
       question: "此 Pilot 需要执行以下命令，是否授权？",
       multiSelect: true,
@@ -747,6 +762,36 @@ AskUserQuestion({
 pilot_id=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/create-pilot-id.sh)
 
 # 保存需求上下文到 .claude/pilots/$pilot_id/context.json
+# 包含以下配置：
+# - requirements: 需求详情
+# - config.tdd_mode: 测试模式（strict/reminder/none）
+# - config.execution_mode: 执行模式（auto/manual）
+# - config.permissions: 授权的权限列表
+# - tech_stack: 技术栈信息
+```
+
+**context.json 结构示例：**
+
+```json
+{
+  "pilot_id": "pilot-20250203-143522",
+  "title": "用户登录功能（JWT 认证）",
+  "requirements": {
+    "summary": "实现用户登录功能...",
+    "core_features": [...],
+    "tech_details": {...}
+  },
+  "config": {
+    "tdd_mode": "strict",
+    "execution_mode": "auto",
+    "permissions": ["database", "dependencies", "testing"]
+  },
+  "tech_stack": {
+    "backend": "FastAPI",
+    "database": "PostgreSQL",
+    "frontend": "React"
+  }
+}
 ```
 
 ### 更新权限配置
