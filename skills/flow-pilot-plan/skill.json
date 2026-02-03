@@ -2,5 +2,5 @@
   "name": "flow-pilot-plan",
   "description": "生成或查看执行计划",
   "userInvocable": true,
-  "version": "1.0.4"
+  "version": "1.0.5"
 }

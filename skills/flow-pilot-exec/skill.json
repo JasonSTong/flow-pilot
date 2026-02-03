@@ -2,5 +2,5 @@
   "name": "flow-pilot-exec",
   "description": "执行开发任务（支持 TDD）",
   "userInvocable": true,
-  "version": "1.0.4"
+  "version": "1.0.5"
 }

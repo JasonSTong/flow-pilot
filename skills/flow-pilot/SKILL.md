@@ -1,7 +1,7 @@
 ---
 name: flow-pilot
 description: 智能工作流：需求收集、计划生成、自动执行
-version: 1.0.4
+version: 1.0.5
 disable-model-invocation: false
 allowed-tools: Read, Grep, Bash, AskUserQuestion, Skill(*)
 ---
