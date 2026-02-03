@@ -1,7 +1,7 @@
 ---
 name: flow-pilot-test
 description: TDD 测试助手（多语言支持）
-version: 1.0.2
+version: 1.0.3
 disable-model-invocation: false
 allowed-tools: Read, Write, Edit, Bash
 ---

@@ -1,7 +1,7 @@
 ---
 name: flow-pilot-plan
 description: 生成或查看执行计划
-version: 1.0.2
+version: 1.0.3
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, AskUserQuestion, Skill(flow-pilot-exec)
 ---
