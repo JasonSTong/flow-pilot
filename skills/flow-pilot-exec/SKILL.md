@@ -3,7 +3,7 @@ name: flow-pilot-exec
 description: 执行开发任务（支持 TDD）
 version: 1.0.2
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Bash, Skill(flow-pilot-test)
+allowed-tools: Read, Write, Edit, Bash, AskUserQuestion, Skill(flow-pilot-test)
 ---
 
 # Flow-Pilot 执行引擎
@@ -234,6 +234,8 @@ echo "
 
 ### 遇到错误时
 
+显示错误信息并使用 `AskUserQuestion` 询问用户：
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️  执行中断
@@ -243,11 +245,34 @@ Phase 2, Task 2.2: verify_password 函数
 错误: pytest 测试失败
 
 已保存当前进度。
+```
 
-下一步选择：
-1. "修复错误并继续"
-2. "暂停 Pilot"
-3. "跳过此任务"
+然后调用 AskUserQuestion：
+
+```javascript
+AskUserQuestion({
+  questions: [
+    {
+      header: "错误处理",
+      question: "执行中断，如何继续？",
+      multiSelect: false,
+      options: [
+        {
+          label: "修复错误并继续",
+          description: "分析错误并修复，然后继续执行"
+        },
+        {
+          label: "暂停 Pilot",
+          description: "保存当前进度，稍后恢复"
+        },
+        {
+          label: "跳过此任务",
+          description: "标记任务为失败，继续下一个任务"
+        }
+      ]
+    }
+  ]
+})
 ```
 
 ### 用户选择"暂停"
@@ -352,4 +377,5 @@ fi
 - 🔄 根据 TDD 模式调整流程
 - 📊 实时更新进度跟踪
 - 🛡️ 遇到错误智能处理
+- 📋 使用 **AskUserQuestion** 处理错误和异常情况
 - 📝 记录重要决策

@@ -3,7 +3,7 @@ name: flow-pilot-plan
 description: 生成或查看执行计划
 version: 1.0.2
 disable-model-invocation: true
-allowed-tools: Read, Write, Bash, Skill(flow-pilot-exec)
+allowed-tools: Read, Write, Bash, AskUserQuestion, Skill(flow-pilot-exec)
 ---
 
 # Flow-Pilot 计划生成器
@@ -82,6 +82,8 @@ fi
 
 ### 3. 展示计划并询问用户
 
+展示计划摘要：
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ 计划已生成
@@ -98,12 +100,38 @@ fi
 - Phase 5: 测试部署（4 个任务）
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
-下一步：
-1. "开始执行" - 立即开始 Phase 1
-2. "修改计划" - 调整某些阶段
-3. "查看详情" - 显示完整计划
-4. "稍后执行" - 计划已保存，以后用 /flow-pilot-exec 开始
+然后使用 `AskUserQuestion` 询问下一步：
+
+```javascript
+AskUserQuestion({
+  questions: [
+    {
+      header: "下一步",
+      question: "计划已生成，接下来？",
+      multiSelect: false,
+      options: [
+        {
+          label: "开始执行",
+          description: "立即开始 Phase 1"
+        },
+        {
+          label: "查看详情",
+          description: "显示完整计划内容"
+        },
+        {
+          label: "修改计划",
+          description: "调整某些阶段或任务"
+        },
+        {
+          label: "稍后执行",
+          description: "计划已保存，以后用 /flow-pilot-exec 开始"
+        }
+      ]
+    }
+  ]
+})
 ```
 
 ### 4. 根据用户选择调用后续流程
@@ -113,10 +141,51 @@ fi
 /flow-pilot-exec pilot-20250130-143522
 ```
 
-**选择 "修改计划":**
+**选择 "查看详情":**
+```bash
+# 读取并展示完整计划
+cat .claude/pilots/pilot-20250130-143522/plan.md
 ```
-好的，你想调整什么？
-[进入计划修改模式]
+
+**选择 "修改计划":**
+
+使用 `AskUserQuestion` 进一步询问：
+```javascript
+AskUserQuestion({
+  questions: [
+    {
+      header: "修改内容",
+      question: "你想调整什么？",
+      multiSelect: true,
+      options: [
+        {
+          label: "调整阶段顺序",
+          description: "改变执行的先后顺序"
+        },
+        {
+          label: "增加/删除任务",
+          description: "添加遗漏的任务或删除不需要的"
+        },
+        {
+          label: "修改 TDD 模式",
+          description: "调整某些阶段的测试策略"
+        },
+        {
+          label: "重新规划",
+          description: "重新生成整个计划"
+        }
+      ]
+    }
+  ]
+})
+```
+
+**选择 "稍后执行":**
+```
+好的，计划已保存。
+
+稍后执行时使用：
+/flow-pilot-exec pilot-20250130-143522
 ```
 
 ---
@@ -209,4 +278,5 @@ Phase 3: 测试补充
 - 🎯 聚焦于**制定清晰的计划**
 - 📝 提供**可追踪的任务清单**
 - 🔄 支持**计划的查看和修改**
+- 📋 使用 **AskUserQuestion** 进行所有用户交互
 - 🚀 完成后**引导用户进入执行阶段**
