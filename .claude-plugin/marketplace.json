@@ -16,9 +16,8 @@
         "email": "chensitongc@gmail.com"
       },
       "source": {
-        "source": "url",
-        "url": "https://github.com/JasonSTong/flow-pilot.git",
-        "ref": "main"
+        "source": "git",
+        "url": "https://github.com/JasonSTong/flow-pilot.git"
       },
       "category": "development",
       "homepage": "https://github.com/JasonSTong/flow-pilot"
