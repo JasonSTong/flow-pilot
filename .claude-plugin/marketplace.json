@@ -15,7 +15,10 @@
         "name": "Jason Chen",
         "email": "chensitongc@gmail.com"
       },
-      "source": "JasonSTong/flow-pilot",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/JasonSTong/flow-pilot.git"
+      },
       "category": "development",
       "homepage": "https://github.com/JasonSTong/flow-pilot"
     }
