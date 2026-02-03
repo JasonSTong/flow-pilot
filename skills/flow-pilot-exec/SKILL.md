@@ -1,7 +1,7 @@
 ---
 name: flow-pilot-exec
 description: 执行开发任务（支持 TDD）
-version: 1.0.5
+version: 1.0.6
 disable-model-invocation: false
 allowed-tools: Read, Write, Edit, Bash, AskUserQuestion, Skill(flow-pilot-test)
 ---

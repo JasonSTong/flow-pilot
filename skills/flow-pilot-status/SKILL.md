@@ -1,7 +1,7 @@
 ---
 name: flow-pilot-status
 description: 查看状态和进度
-version: 1.0.5
+version: 1.0.6
 disable-model-invocation: true
 allowed-tools: Read, Bash
 ---
