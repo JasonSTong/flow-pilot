@@ -34,6 +34,7 @@ echo ""
 
 # 路径定义
 GLOBAL_CONFIG="$HOME/.claude/settings.json"
+KNOWN_MARKETPLACES="$HOME/.claude/plugins/known_marketplaces.json"
 CLAUDE_DIR="$HOME/.claude"
 PLUGINS_DIR="$HOME/.claude/plugins"
 
@@ -111,6 +112,56 @@ EOF
         echo "✅ 配置已创建"
     else
         echo "❌ 配置创建失败"
+        exit 1
+    fi
+fi
+
+# 配置 known_marketplaces.json（直接添加，无需用户手动操作）
+echo ""
+echo "📦 注册 marketplace..."
+
+CURRENT_TIME=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+
+if [ -f "$KNOWN_MARKETPLACES" ]; then
+    cp "$KNOWN_MARKETPLACES" "$KNOWN_MARKETPLACES.backup"
+
+    jq --arg url "$MARKETPLACE_URL" --arg time "$CURRENT_TIME" '
+        . + {
+            "flow-pilot-marketplace": {
+                "source": {
+                    "source": "url",
+                    "url": $url
+                },
+                "lastUpdated": $time
+            }
+        }
+    ' "$KNOWN_MARKETPLACES.backup" > "$KNOWN_MARKETPLACES"
+
+    if jq empty "$KNOWN_MARKETPLACES" 2>/dev/null; then
+        rm "$KNOWN_MARKETPLACES.backup"
+        echo "✅ Marketplace 已自动注册"
+    else
+        mv "$KNOWN_MARKETPLACES.backup" "$KNOWN_MARKETPLACES"
+        echo "❌ Marketplace 注册失败"
+        exit 1
+    fi
+else
+    cat > "$KNOWN_MARKETPLACES" << EOF
+{
+  "flow-pilot-marketplace": {
+    "source": {
+      "source": "url",
+      "url": "$MARKETPLACE_URL"
+    },
+    "lastUpdated": "$CURRENT_TIME"
+  }
+}
+EOF
+
+    if jq empty "$KNOWN_MARKETPLACES" 2>/dev/null; then
+        echo "✅ Marketplace 已自动注册"
+    else
+        echo "❌ Marketplace 注册失败"
         exit 1
     fi
 fi
